@@ -24,7 +24,7 @@ class ReminderReceiver : BroadcastReceiver() {
         } else {
             val occurrence = LocalDate.ofEpochDay(occurrenceEpochDay)
             title = name
-            text = "${stage.label}：${name}的${typeLabel}在 ${occurrence.month}月${occurrence.day}日"
+            text = "${stage.label}：${name}的${typeLabel}在 ${occurrence.monthValue}月${occurrence.dayOfMonth}日"
         }
 
         val notificationId = (eventId.toInt() and 0x0fffffff) * 4 + stageIndex

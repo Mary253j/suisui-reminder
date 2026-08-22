@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,7 +34,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -211,6 +212,15 @@ private fun SettingRow(label: String, value: String, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimePickerDialogWrap(initialMinutes: Int, onConfirm: (Int) -> Unit, onDismiss: () -> Unit) {
@@ -218,13 +228,12 @@ private fun TimePickerDialogWrap(initialMinutes: Int, onConfirm: (Int) -> Unit, 
         initialHour = initialMinutes / 60,
         initialMinute = initialMinutes % 60
     )
-    TimePickerDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = { onConfirm(state.hour * 60 + state.minute) }) { Text("确定") }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
-    ) {
-        TimePicker(state = state)
-    }
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
+        text = { TimePicker(state = state) }
+    )
 }
