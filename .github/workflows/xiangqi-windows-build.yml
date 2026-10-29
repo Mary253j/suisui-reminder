@@ -1,0 +1,72 @@
+name: Build Xiangqi Windows EXE
+on:
+  push:
+    branches: [codex/xiangqi-apk-build]
+    paths: ['xiangqi-windows-source.zip', '.github/workflows/xiangqi-windows-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+      - name: Unpack isolated desktop project
+        run: python -m zipfile -e xiangqi-windows-source.zip .
+      - name: Install build dependencies
+        working-directory: xiangqi-autoplayer
+        run: python -m pip install -r requirements.txt "pyinstaller>=6,<7" "py7zr>=1,<2"
+      - name: Verify rules and control loop
+        working-directory: xiangqi-autoplayer
+        shell: python
+        run: |
+          import sys, unittest
+          sys.path.insert(0, '.')
+          sys.path.insert(0, 'tests')
+          suite=unittest.defaultTestLoader.loadTestsFromNames(['test_model','test_engine','test_runner'])
+          if not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful():raise SystemExit(1)
+      - name: Build standalone Windows application
+        working-directory: xiangqi-autoplayer
+        run: python -m PyInstaller --noconfirm --clean --onedir --windowed --name XiangqiAutoPlayer --add-data "assets;assets" app.py
+      - name: Bundle official Windows Pikafish and NNUE
+        working-directory: xiangqi-autoplayer
+        run: python tools/prepare_windows.py
+      - name: Verify actual Windows engine
+        working-directory: xiangqi-autoplayer
+        run: python tools/check_engine.py dist/XiangqiAutoPlayer/engine/pikafish.exe
+      - name: Verify frozen EXE startup and desktop capture
+        working-directory: xiangqi-autoplayer
+        shell: python
+        run: |
+          import json, subprocess
+          from pathlib import Path
+          output=Path('frozen-startup-check.json').resolve()
+          exe=Path('dist/XiangqiAutoPlayer/XiangqiAutoPlayer.exe').resolve()
+          # Launch from an unrelated cwd, as a shortcut or downloaded folder would.
+          subprocess.run([str(exe),'--smoke-test',str(output)],cwd=Path.home(),check=True,timeout=90)
+          data=json.loads(output.read_text('utf-8'));assert data['ok'],data
+          print(json.dumps(data,ensure_ascii=True,indent=2))
+          # CI's temporary engine path must not leak into the shipped first-run config.
+          for p in [exe.parent/'config.json',exe.parent/'logs']:
+              if p.is_dir():
+                  import shutil;shutil.rmtree(p)
+              elif p.exists():p.unlink()
+      - name: Zip portable distribution
+        working-directory: xiangqi-autoplayer
+        shell: python
+        run: |
+          import shutil,hashlib
+          from pathlib import Path
+          p=Path(shutil.make_archive('XiangqiAutoPlayer-Windows-x64','zip','dist','XiangqiAutoPlayer'))
+          print('ZIP SHA256:',hashlib.sha256(p.read_bytes()).hexdigest())
+      - uses: actions/upload-artifact@v4
+        with:
+          name: XiangqiAutoPlayer-Windows-x64
+          path: xiangqi-autoplayer/XiangqiAutoPlayer-Windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14
