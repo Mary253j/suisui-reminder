@@ -28,7 +28,7 @@ jobs:
           import sys, unittest
           sys.path.insert(0, '.')
           sys.path.insert(0, 'tests')
-          suite=unittest.defaultTestLoader.loadTestsFromNames(['test_model','test_engine','test_runner'])
+          suite=unittest.defaultTestLoader.loadTestsFromNames(['test_model','test_engine','test_runner','test_calibration'])
           if not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful():raise SystemExit(1)
       - name: Build standalone Windows application
         working-directory: xiangqi-autoplayer
