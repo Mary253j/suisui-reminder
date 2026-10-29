@@ -38,7 +38,7 @@ jobs:
           python - <<'PY'
           import zipfile
           with zipfile.ZipFile('xiangqi-android/XiangqiPhone-debug.apk') as z:
-              for path in ['lib/arm64-v8a/libpikafish.so','assets/engine/pikafish.nnue','assets/engine/pikafish-source.tar.gz','assets/templates.bin']:
+              for path in ['lib/arm64-v8a/libpikafish.so','assets/engine/pikafish.nnue','assets/engine/pikafish-source.zip','assets/engine/COPYING.txt','assets/templates.bin']:
                   assert path in z.namelist(), path
           print('APK contents verified')
           PY
