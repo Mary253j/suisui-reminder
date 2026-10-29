@@ -56,17 +56,19 @@ jobs:
               if p.is_dir():
                   import shutil;shutil.rmtree(p)
               elif p.exists():p.unlink()
-      - name: Zip portable distribution
+      - name: Verify portable distribution layout
         working-directory: xiangqi-autoplayer
         shell: python
         run: |
-          import shutil,hashlib
+          import hashlib
           from pathlib import Path
-          p=Path(shutil.make_archive('XiangqiAutoPlayer-Windows-x64','zip','dist','XiangqiAutoPlayer'))
-          print('ZIP SHA256:',hashlib.sha256(p.read_bytes()).hexdigest())
+          root=Path('dist/XiangqiAutoPlayer')
+          for relative in ['XiangqiAutoPlayer.exe','engine/pikafish.exe','engine/pikafish.nnue','_internal/assets/templates.npz']:
+              assert (root/relative).is_file(),relative
+          print('EXE SHA256:',hashlib.sha256((root/'XiangqiAutoPlayer.exe').read_bytes()).hexdigest())
       - uses: actions/upload-artifact@v4
         with:
           name: XiangqiAutoPlayer-Windows-x64
-          path: xiangqi-autoplayer/XiangqiAutoPlayer-Windows-x64.zip
+          path: xiangqi-autoplayer/dist
           if-no-files-found: error
           retention-days: 14
